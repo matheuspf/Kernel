@@ -111,7 +111,7 @@ public:
     using base = cv::Mat_<T>;
 
     using ValueType = T;
-
+ 
 
     inline decltype(auto) operator () (int i, int j)
     {
