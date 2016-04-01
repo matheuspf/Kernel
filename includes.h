@@ -1,3 +1,5 @@
+#ifndef INCLUDES_H
+#define INCLUDES_H
 #include <iostream>
 #include <vector>
 #include <array>
@@ -130,3 +132,5 @@ struct Point : public std::pair<T, U>
 }   //namespace impl
 
 }   //namespace knl
+
+#endif
