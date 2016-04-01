@@ -4,7 +4,7 @@
 int main()
 {
     impl::Matrix<cv::Mat_<uchar>> mat(cv::imread("..//img1.jpg", 0));
-     
+
     impl::Matrix<cv::Mat_<uchar>> mat2(cv::imread("..//img1.jpg", 0));
 
     int k = 5;
@@ -28,9 +28,6 @@ int main()
     //auto res = kernel(mat);
     auto res2 = kernel(mat2);
 
-
-
-    ASADAS
 
 
     //cv::namedWindow("w");
