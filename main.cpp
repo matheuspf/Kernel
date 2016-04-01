@@ -6,9 +6,9 @@
 
 int main()
 {
-    impl::Matrix<cv::Mat_<uchar>> mat(cv::imread("..//img1.jpg", 0));
+    knl::Matrix<cv::Mat_<uchar>> mat(cv::imread("..//img1.jpg", 0));
 
-    impl::Matrix<cv::Mat_<uchar>> mat2(cv::imread("..//img1.jpg", 0));
+    //knl::Matrix<cv::Mat_<uchar>> mat2(cv::imread("..//img1.jpg", 0));
 
     int k = 5;
 
@@ -25,18 +25,18 @@ int main()
 
 
 
-    Kernel<decltype(f)> kernel(f, k, k, 1);
+    knl::Kernel<decltype(f)> kernel(f, k, k, 1);
 
 
-    //auto res = kernel(mat);
-    auto res2 = kernel(mat2);
+    auto res = kernel(mat);
+    //auto res2 = kernel(mat2);
 
 
 
-    //cv::namedWindow("w");
-    //cv::imshow("w", res);
-    cv::namedWindow("t");
-    cv::imshow("t", res2);
+    cv::namedWindow("w");
+    cv::imshow("w", res);
+    //cv::namedWindow("t");
+    //cv::imshow("t", res2);
     cv::waitKey(0);
 
 

@@ -6,73 +6,68 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "../Benchmark.h"
+#include "wrappers.h"
 
-namespace impl
+
+namespace knl       // Main namespace
 {
 
-struct nullType {};
+namespace impl      // implers
+{
+
+struct NullType {};     // Empty class for convenience
+
+template <class> struct PrintType;       // "Prints" type of variable in compile time.
 
 
-template <class>
-struct PrintType;
 
+// This function decides between two variables on compile time depending on value of parameter 'Condition'
+// With optimazations enabled on g++ (-O2) the generated assembly is identical to the assignment of the choosen variable
 
-
-template <bool Cond, typename T, typename U>
-inline decltype(auto) choose (T&& t, U&&, std::enable_if_t<Cond>* = nullptr)
+template <bool Condition, typename T, typename U>
+inline decltype(auto) choose (T&& t, U&&, std::enable_if_t<Condition>* = nullptr)
 {
     return std::forward<T>(t);
 }
 
-template <bool Cond, typename T, typename U>
-inline decltype(auto) choose (T&&, U&& u, std::enable_if_t<!Cond>* = nullptr)
+template <bool Condition, typename T, typename U>
+inline decltype(auto) choose (T&&, U&& u, std::enable_if_t<!Condition>* = nullptr)
 {
     return std::forward<U>(u);
 }
 
 
 
-template <typename T, typename U>
-struct point : public std::pair<T, U>
-{
+// Handy class for manipulation of Points in 2d space. Inherits from std::pair<T, U> for convenience.
 
+template <typename T, typename U>
+struct Point : public std::pair<T, U>
+{
     using base = std::pair<T, U>;
 
     using base::base;
 
 
-    constexpr inline decltype(auto) x ()
-    {
-        return this->first;
-    }
+    // Acessors: 'Point<T, U>::first' does not makes sense. 'Point<T, U>::x()'' does, and have the exact same performance as acessing the variable
+    // No way to create 'Point<T, U>::x' without incurring the overhead of creating a new variable
 
-    constexpr inline const decltype(auto) x () const
-    {
-        return this->first;
-    }
+    constexpr inline decltype(auto) x () { return this->first; }
+    constexpr inline const decltype(auto) x () const { return this->first; }
 
-
-    constexpr inline decltype(auto) y ()
-    {
-        return this->second;
-    }
-
-    constexpr inline const decltype(auto) y () const
-    {
-        return this->second;
-    }
+    constexpr inline decltype(auto) y () { return this->second; }
+    constexpr inline const decltype(auto) y () const { return this->second; }
 
 
     template <typename V, typename W>
     inline auto operator + (const std::pair<V, W>& p) const
     {
-        return point(std::make_pair(this->first + p.first, this->second + p.second));
+        return Point(std::make_pair(this->first + p.first, this->second + p.second));
     }
 
     template <typename V, typename W>
     inline auto operator - (const std::pair<V, W>& p) const
     {
-        return point(std::make_pair(this->first - p.first, this->second - p.second));
+        return Point(std::make_pair(this->first - p.first, this->second - p.second));
     }
 
 
@@ -95,42 +90,6 @@ struct point : public std::pair<T, U>
     }
 };
 
+}   //namespace impl
 
-
-template <class>
-class Matrix;
-
-
-template <typename T>
-struct Matrix<cv::Mat_<T>> : public cv::Mat_<T>
-{
-public:
-
-    using cv::Mat_<T>::Mat_;
-
-    using base = cv::Mat_<T>;
-
-    using ValueType = T;
- 
-
-    inline decltype(auto) operator () (int i, int j)
-    {
-        return (base::operator[](i))[j];
-    }
-
-    template <typename U, typename V>
-    inline decltype(auto) operator () (const point<U, V>& p)
-    {
-        return operator()(p.x(), p.y());
-    }
-
-
-    template <typename U>
-    static inline auto create (U&&, int rows, int cols)
-    {
-        return Matrix<cv::Mat_<U>>(rows, cols);
-    }
-
-};
-
-}
+}   //namespace knl

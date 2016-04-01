@@ -7,7 +7,8 @@
 
 
 
-
+namespace knl
+{
 
 template <class M>
 struct Window
@@ -66,8 +67,8 @@ public:
 
     using value_type = typename std::decay_t<M>::ValueType&;
 
-    using pointer       = typename std::decay_t<M>::ValueType*;
-    using const_pointer = const pointer;
+    using Pointer       = typename std::decay_t<M>::ValueType*;
+    using const_Pointer = const Pointer;
 
     using reference       = typename std::decay_t<M>::ValueType&;
     using const_reference = const reference;
@@ -114,7 +115,7 @@ public:
     }
 
     template <typename T, typename U>
-    inline decltype(auto) operator () (const point<T, U>& p)
+    inline decltype(auto) operator () (const impl::Point<T, U>& p)
     {
         return operator()(p.x(), p.y());
     }
@@ -142,8 +143,8 @@ public:
     int imgRows;
     int imgCols;
 
-    point<int, int> imgPos;
-    point<int, int> center;
+    impl::Point<int, int> imgPos;
+    impl::Point<int, int> center;
 
 };
 
@@ -160,7 +161,7 @@ struct RegularWindow : public Window<M>
     }
 
     template <typename T, typename U>
-    inline decltype(auto) operator () (const point<T, U>& p)
+    inline decltype(auto) operator () (const Point<T, U>& p)
     {
         return operator()(p.x(), p.y());
     }*/
@@ -184,7 +185,7 @@ struct ReplicateBorder : public Window<M>
 
     inline decltype(auto) operator () (int i, int j)
     {
-        point<int, int> pos = std::make_pair(i - this->center.x() + this->imgPos.x(),
+        impl::Point<int, int> pos = std::make_pair(i - this->center.x() + this->imgPos.x(),
                                              j - this->center.y() + this->imgPos.y());
 
         return this->mat(pos.x() < 0 ? 0 : pos.x() >= this->mat.rows ? this->mat.rows - 1 : pos.x(),
@@ -192,7 +193,7 @@ struct ReplicateBorder : public Window<M>
     }
 
     template <typename T, typename U>
-    inline decltype(auto) operator () (const point<T, U>& p)
+    inline decltype(auto) operator () (const impl::Point<T, U>& p)
     {
         return operator()(p.x(), p.y());
     }
@@ -202,7 +203,7 @@ struct ReplicateBorder : public Window<M>
 
 
 
-template <class FunctionType, template <class> class BorderType = impl::ReplicateBorder, bool Circular = false>
+template <class FunctionType, template <class> class BorderType = ReplicateBorder, bool Circular = false>
 class Kernel
 {
 public:
@@ -210,7 +211,7 @@ public:
     using Function = FunctionType;
 
     template <class M>
-    using Window = std::conditional_t<Circular, impl::CircularWindow<M>, impl::RegularWindow<M>>;
+    using Window = std::conditional_t<Circular, CircularWindow<M>, RegularWindow<M>>;
 
     template <class M>
     using Border = BorderType<M>;
@@ -367,11 +368,13 @@ struct Traits<R(C::*)(A...) const>
 
 
 
-template <class FunctionType, template <class> class BorderType = impl::ReplicateBorder, bool Circular = false, typename... Args>
+template <class FunctionType, template <class> class BorderType = ReplicateBorder, bool Circular = false, typename... Args>
 inline auto makeKernel (FunctionType f, Args&&... args)
 {
     return Kernel<FunctionType, BorderType, Circular>(f, args...);
 }
+
+}   // namespace knl
 
 
 
