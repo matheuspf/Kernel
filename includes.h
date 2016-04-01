@@ -17,14 +17,42 @@ namespace impl      // implers
 
 struct NullType {};     // Empty class for convenience
 
-template <class> struct PrintType;       // "Prints" type of variable in compile time.
+template <class>
+struct PrintType;       // "Prints" type of variable in compile time.
+
+
+
+// Verifying truthness of variadic bools
+// Example:  And<std::is_integral<Args>::value...>::value
+
+template <bool...>
+struct And;
+
+template <bool B1, bool... Bs>
+struct And<B1, Bs...> : public And<Bs...> {};
+
+template <bool... Bs>
+struct And<false, Bs...> : public std::false_type {};
+
+template <>
+struct And<true> : public std::true_type {};
+
+
+
+// Verify if given class is some 'Matrix' wrapper
+
+template <class...>
+struct IsMat : public std::false_type {};
+
+template <class M>
+struct IsMat<Matrix<M>> : public std::true_type {};
 
 
 
 // This function decides between two variables on compile time depending on value of parameter 'Condition'
 // With optimazations enabled on g++ (-O2) the generated assembly is identical to the assignment of the choosen variable
 
-template <bool Condition, typename T, typename U>
+/*template <bool Condition, typename T, typename U>
 inline decltype(auto) choose (T&& t, U&&, std::enable_if_t<Condition>* = nullptr)
 {
     return std::forward<T>(t);
@@ -34,6 +62,15 @@ template <bool Condition, typename T, typename U>
 inline decltype(auto) choose (T&&, U&& u, std::enable_if_t<!Condition>* = nullptr)
 {
     return std::forward<U>(u);
+}*/
+
+
+// Compile time choice between variadic number of arguments
+
+template <std::size_t Choice, typename... Args, typename = std::enable_if_t<bool(Choice < sizeof...(Args))>>
+constexpr decltype(auto) choose (Args&&... args)
+{
+    return std::get<Choice>(std::forward_as_tuple<Args...>(std::forward<Args>(args)...));
 }
 
 

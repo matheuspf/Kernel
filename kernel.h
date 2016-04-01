@@ -225,12 +225,28 @@ public:
             f(f), rows(rows), cols(cols == -1 ? rows : cols), numThreads(numThreads) {}
 
 
+    template <class... Ms>
+    inline decltype(auto) operator() (Ms&&... mats)
+    {
+        return wrap(nullptr, std::forward<Ms>(mats)...);
+    }
+
 
     template <class... Ms>
-    inline auto operator () (Ms&&... mats)
+    inline decltype(auto) wrap (std::enable_if_t<!impl::And<impl::IsMat<std::decay_t<Ms>>::value...>::value>*, Ms&&... mats)
+    {
+        return wrap(nullptr, static_cast<Matrix<std::decay_t<Ms>>&&>(std::move(mats))...);
+    }
+
+    template <class... Ms>
+    inline decltype(auto) wrap (std::enable_if_t<impl::And<impl::IsMat<std::decay_t<Ms>>::value...>::value>*, Ms&&... mats)
     {
         return delegate<std::decay_t<std::result_of_t<Function(Window<std::decay_t<Ms>>...)>>, Ms...>(std::forward<Ms>(mats)...);
     }
+
+
+
+
 
 
     template <typename Return, class M, class... Ms, typename = std::enable_if_t<std::is_same<Return, void>::value>>
@@ -244,7 +260,7 @@ public:
         }, m.rows, m.cols, std::forward<M>(m), std::forward<Ms>(mats)...);
 
 
-        return impl::choose<bool(sizeof...(Ms))>(std::tie(std::forward<M>(m), std::forward<Ms>(mats)...), std::forward<M>(m));
+        return impl::choose<sizeof...(Ms) ? 1 : 0>(std::tie(std::forward<M>(m), std::forward<Ms>(mats)...), std::forward<M>(m));
     }
 
     template <typename Return, class M, class... Ms, typename = std::enable_if_t<!std::is_same<Return, void>::value>>
@@ -270,7 +286,8 @@ public:
     inline void execute (Apply apply, int matRows, int matCols, Ms&&... mats)
     {
         //if(numThreads > 1)
-          //  boost::thread([&]{ applyBorder([&](int i, int j){ return apply(i, j, Border<std::decay_t<M>>(mat, rows, cols)); }, mat.rows, mat.cols); }).join();
+            //boost::thread(this, &Kernel::applyBorder, [&](int i, int j){ return apply(i, j, Border<std::decay_t<Ms>>(mats, rows, cols)...); }, matRows, matCols).join();
+            //boost::thread([&]{ applyBorder([&](int i, int j){ return apply(i, j, Border<std::decay_t<Ms>>(mats, rows, cols)...); }, matRows, matCols); }).join();
 
         //else
             applyBorder([&](int i, int j){ return apply(i, j, Border<std::decay_t<Ms>>(mats, rows, cols)...); }, matRows, matCols);

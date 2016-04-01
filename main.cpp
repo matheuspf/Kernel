@@ -6,8 +6,9 @@
 
 int main()
 {
-    knl::Matrix<cv::Mat_<uchar>> mat(cv::imread("..//img1.jpg", 0));
-
+    //knl::Matrix<cv::Mat_<uchar>> mat(cv::imread("..//img1.jpg", 0));
+    cv::Mat_<uchar> mat(cv::imread("..//img1.jpg", 0));
+    
     //knl::Matrix<cv::Mat_<uchar>> mat2(cv::imread("..//img1.jpg", 0));
 
     int k = 5;
