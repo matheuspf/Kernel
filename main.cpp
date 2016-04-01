@@ -1,6 +1,9 @@
 #include "kernel.h"
 
 
+/*  g++ -I"C:\opencv\build\include" -I"C:\MinGW\include" -L"C:\opencv\mingw64\lib" main.cpp -g C:\MinGW\lib\libboost_thread.a C:\MinGW\lib\libboost_system.a  -lopencv_core249 -lopencv_highgui249 -std=c++14 */
+
+
 int main()
 {
     impl::Matrix<cv::Mat_<uchar>> mat(cv::imread("..//img1.jpg", 0));
