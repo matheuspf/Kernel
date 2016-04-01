@@ -30,6 +30,9 @@ int main()
 
 
 
+    ASADAS
+
+
     //cv::namedWindow("w");
     //cv::imshow("w", res);
     cv::namedWindow("t");
