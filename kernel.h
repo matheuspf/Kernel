@@ -1,7 +1,6 @@
 #ifndef KERNEL_H
 #define KERNEL_H
-#include "includes.h"
-//#include "../ThreadMat/ThreadMatrix.h"
+#include "KernelUtils.h"
 
 
 
@@ -28,12 +27,12 @@ public:
         Iterator (Window<M>& w, int i, int j) : w(w), i(i), j(j) {}
 
 
-        typename std::decay_t<M>::ValueType& operator* ()
+        decltype(auto) operator* ()
         {
             return w(i, j);
         }
 
-        Iterator& operator++ ()
+        decltype(auto) operator++ ()
         {
             j = (j + 1) % w.cols;
             i += !j;
@@ -104,7 +103,7 @@ public:
 
 
     Window (M& mat_, int rows_, int cols_) :
-            mat(mat_), rows(rows_), cols(cols_), imgRows(mat_.rows), imgCols(mat_.cols),
+            mat(mat_), rows(rows_), cols(cols_), imgRows(mat_.rows()), imgCols(mat_.cols()),
             imgPos(std::make_pair(0, 0)), center(std::make_pair(rows_ / 2, cols_ / 2)) {}
 
 
@@ -188,8 +187,8 @@ struct ReplicateBorder : public Window<M>
         impl::Point<int, int> pos = std::make_pair(i - this->center.x() + this->imgPos.x(),
                                              j - this->center.y() + this->imgPos.y());
 
-        return this->mat(pos.x() < 0 ? 0 : pos.x() >= this->mat.rows ? this->mat.rows - 1 : pos.x(),
-                         pos.y() < 0 ? 0 : pos.y() >= this->mat.cols ? this->mat.cols - 1 : pos.y());
+        return this->mat(pos.x() < 0 ? 0 : pos.x() >= this->mat.rows() ? this->mat.rows() - 1 : pos.x(),
+                         pos.y() < 0 ? 0 : pos.y() >= this->mat.cols() ? this->mat.cols() - 1 : pos.y());
     }
 
     template <typename T, typename U>
@@ -235,7 +234,7 @@ public:
     template <class... Ms>
     inline decltype(auto) wrap (std::enable_if_t<!impl::And<impl::IsMat<std::decay_t<Ms>>::value...>::value>*, Ms&&... mats)
     {
-        return wrap(nullptr, static_cast<Matrix<std::decay_t<Ms>>&&>(std::move(mats))...);
+        return wrap(nullptr, Matrix<std::decay_t<Ms>&>(std::forward<Ms>(mats))...);
     }
 
     template <class... Ms>
@@ -257,7 +256,7 @@ public:
             [](auto&&...){}((ws.imgPos = std::make_pair(i, j))...);
             this->f(std::forward<decltype(ws)>(ws)...);
 
-        }, m.rows, m.cols, std::forward<M>(m), std::forward<Ms>(mats)...);
+        }, m.rows(), m.cols(), std::forward<M>(m), std::forward<Ms>(mats)...);
 
 
         return impl::choose<sizeof...(Ms) ? 1 : 0>(std::tie(std::forward<M>(m), std::forward<Ms>(mats)...), std::forward<M>(m));
@@ -266,7 +265,7 @@ public:
     template <typename Return, class M, class... Ms, typename = std::enable_if_t<!std::is_same<Return, void>::value>>
     inline auto delegate (M&& m, Ms&&... mats)
     {
-        auto res = std::decay_t<M>::create(Return(), m.rows, m.cols);
+        auto res = std::decay_t<M>::create(Return(), m.rows(), m.cols());
 
 
         execute([&](int i, int j, auto&&... ws)
@@ -274,7 +273,7 @@ public:
             [](auto&&...){}((ws.imgPos = std::make_pair(i, j))...);
             res(i, j) = this->f(std::forward<decltype(ws)>(ws)...);
 
-        }, m.rows, m.cols, std::forward<M>(m), std::forward<Ms>(mats)...);
+        }, m.rows(), m.cols(), std::forward<M>(m), std::forward<Ms>(mats)...);
 
 
         return res;

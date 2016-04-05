@@ -1,5 +1,5 @@
-#ifndef INCLUDES_H
-#define INCLUDES_H
+#ifndef KERNEL_UTILS_H
+#define KERNEL_UTILS_H
 #include <iostream>
 #include <vector>
 #include <array>
@@ -7,14 +7,15 @@
 #include <boost/thread.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include "../Wrapper/Wrapper.h"
+#include "MatWrappers.h"
 #include "../Benchmark.h"
-#include "wrappers.h"
 
 
 namespace knl       // Main namespace
 {
 
-namespace impl      // implers
+namespace impl      // impl
 {
 
 struct NullType {};     // Empty class for convenience
@@ -46,25 +47,9 @@ struct And<true> : public std::true_type {};
 template <class...>
 struct IsMat : public std::false_type {};
 
-template <class M>
-struct IsMat<Matrix<M>> : public std::true_type {};
+template <class... Ms>
+struct IsMat<::knl::Matrix<Ms...>> : public std::true_type {};
 
-
-
-// This function decides between two variables on compile time depending on value of parameter 'Condition'
-// With optimazations enabled on g++ (-O2) the generated assembly is identical to the assignment of the choosen variable
-
-/*template <bool Condition, typename T, typename U>
-inline decltype(auto) choose (T&& t, U&&, std::enable_if_t<Condition>* = nullptr)
-{
-    return std::forward<T>(t);
-}
-
-template <bool Condition, typename T, typename U>
-inline decltype(auto) choose (T&&, U&& u, std::enable_if_t<!Condition>* = nullptr)
-{
-    return std::forward<U>(u);
-}*/
 
 
 // Compile time choice between variadic number of arguments
@@ -72,7 +57,7 @@ inline decltype(auto) choose (T&&, U&& u, std::enable_if_t<!Condition>* = nullpt
 template <std::size_t Choice, typename... Args, typename = std::enable_if_t<bool(Choice < sizeof...(Args))>>
 constexpr decltype(auto) choose (Args&&... args)
 {
-    return std::get<Choice>(std::forward_as_tuple<Args...>(std::forward<Args>(args)...));
+    return std::get<Choice>(std::tuple<Args...>(std::forward<Args>(args)...));
 }
 
 
@@ -88,7 +73,7 @@ struct Point : public std::pair<T, U>
 
 
     // Acessors: 'Point<T, U>::first' does not makes sense. 'Point<T, U>::x()'' does, and have the exact same performance as acessing the variable
-    // No way to create 'Point<T, U>::x' without incurring the overhead of creating a new variable
+    // No way to create 'Point<T, U>::x' without incurring the overhead of creating a new variable / reference
 
     constexpr inline decltype(auto) x () { return this->first; }
     constexpr inline const decltype(auto) x () const { return this->first; }

@@ -8,7 +8,7 @@ int main()
 {
     //knl::Matrix<cv::Mat_<uchar>> mat(cv::imread("..//img1.jpg", 0));
     cv::Mat_<uchar> mat(cv::imread("..//img1.jpg", 0));
-    
+
     //knl::Matrix<cv::Mat_<uchar>> mat2(cv::imread("..//img1.jpg", 0));
 
     int k = 5;
@@ -35,7 +35,7 @@ int main()
 
 
     cv::namedWindow("w");
-    cv::imshow("w", res);
+    cv::imshow("w", cv::Mat_<uchar>(res));
     //cv::namedWindow("t");
     //cv::imshow("t", res2);
     cv::waitKey(0);
