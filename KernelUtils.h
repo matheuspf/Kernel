@@ -1,15 +1,12 @@
 #ifndef KERNEL_UTILS_H
 #define KERNEL_UTILS_H
-#include <iostream>
+
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <functional>
 #include <boost/thread.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include "../Wrapper/Wrapper.h"
-#include "MatWrappers.h"
-#include "../Benchmark.h"
+
 
 
 namespace knl       // Main namespace
@@ -18,10 +15,8 @@ namespace knl       // Main namespace
 namespace impl      // impl
 {
 
-struct NullType {};     // Empty class for convenience
-
 template <class>
-struct PrintType;       // "Prints" type of variable in compile time.
+struct PrintType;       // "Prints" type of variable at compile time.
 
 
 
@@ -42,22 +37,15 @@ struct And<true> : public std::true_type {};
 
 
 
-// Verify if given class is some 'Matrix' wrapper
-
-template <class...>
-struct IsMat : public std::false_type {};
-
-template <class... Ms>
-struct IsMat<::knl::Matrix<Ms...>> : public std::true_type {};
-
-
 
 // Compile time choice between variadic number of arguments
 
-template <std::size_t Choice, typename... Args, typename = std::enable_if_t<bool(Choice < sizeof...(Args))>>
+template <std::size_t N, typename... Args>
 constexpr decltype(auto) choose (Args&&... args)
 {
-    return std::get<Choice>(std::tuple<Args...>(std::forward<Args>(args)...));
+    static_assert(N < sizeof...(Args), "Position exceeds maximum number of arguments");
+
+    return std::get<N>(std::tuple<Args...>(std::forward<Args>(args)...));
 }
 
 
