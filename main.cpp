@@ -1,4 +1,10 @@
 #include "kernel.h"
+
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#define USING_OPENCV
+
 #include "../Wrapper/Matrix.h"
 
 
@@ -32,7 +38,7 @@ int main()
     knl::Kernel<decltype(f)>(f, k, k)(res, mat);*/
 
 
-    constexpr int width = 20;
+    constexpr int width = 2;
     constexpr int rows = width * 2 + 1;
 
 
@@ -69,7 +75,7 @@ int main()
 
 
     namedWindow("w");
-    imshow("w", Mat_<uchar>(prt));
+    imshow("w", Mat_<uchar>(res));
     waitKey(0);
 
 
